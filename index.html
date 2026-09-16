@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marcela Sampaio — Computational Geometry &amp; Graphics Engineer</title>
+<meta name="description" content="I build the geometry layer underneath graphics software: computational geometry, Three.js/WebGL and CAD tooling for configurators and design tools.">
+<meta property="og:title" content="Marcela Sampaio — Computational Geometry &amp; Graphics Engineer">
+<meta property="og:description" content="Computational geometry, WebGL and CAD tooling — the part that has to be correct, not just look right.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230E1416'/%3E%3Cpath d='M8 24 L16 8 L24 24' fill='none' stroke='%2357C2A8' stroke-width='2.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light dark;
+  --paper:#F6F7F6; --surface:#FFFFFF; --sunk:#EFF2F1;
+  --ink:#12191B; --ink-2:#48595F; --ink-3:#788C93;
+  --line:#DBE3E1; --line-2:#C6D2CF;
+  --accent:#12705C; --accent-soft:#E2F0EB; --on-accent:#F6F7F6;
+  --warn:#B3462F;
+  --instrument:#0E1416; --instrument-2:#151E21; --instrument-line:#27353A;
+  --instrument-ink:#E6EEF0; --instrument-ink-2:#9BB0B6; --instrument-ink-3:#7A9099;
+  --instrument-accent:#57C2A8; --instrument-warn:#E0715F;
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B1113; --surface:#131B1E; --sunk:#0F171A;
+    --ink:#E6EEF0; --ink-2:#A3B7BC; --ink-3:#7A9099;
+    --line:#222F33; --line-2:#2E3E43;
+    --accent:#57C2A8; --accent-soft:#16302B; --on-accent:#08100E;
+    --warn:#E0715F;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B1113; --surface:#131B1E; --sunk:#0F171A;
+  --ink:#E6EEF0; --ink-2:#A3B7BC; --ink-3:#7A9099;
+  --line:#222F33; --line-2:#2E3E43;
+  --accent:#57C2A8; --accent-soft:#16302B; --on-accent:#08100E;
+  --warn:#E0715F;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1060px;margin:0 auto;padding-inline:20px}
+.measure{max-width:64ch}
+a{color:inherit}
+h1,h2,h3{font-family:var(--sans);font-weight:700;letter-spacing:-.022em;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,5.2vw,50px);line-height:1.08}
+h2{font-size:clamp(21px,2.6vw,27px);line-height:1.2}
+h3{font-size:18px;letter-spacing:-.012em;font-weight:600}
+p{margin:0}
+.eyebrow{
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+}
+
+/* ---------- ruler rule: the structural device, and it measures something ---------- */
+.ruler{
+  height:26px;margin-block:0;border:0;border-top:1px solid var(--line);
+  background-image:repeating-linear-gradient(to right,var(--line-2) 0 1px,transparent 1px 40px);
+  background-size:40px 7px;background-repeat:repeat-x;background-position:0 0;
+}
+
+/* ---------- hero ---------- */
+header.hero{padding-block:clamp(44px,8vw,86px) 0}
+.hero .eyebrow{margin-bottom:18px}
+.hero h1{margin-bottom:22px}
+.lede{font-size:clamp(17px,2vw,19.5px);color:var(--ink-2);}
+.lede strong{color:var(--ink);font-weight:600}
+.hero-cta{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:28px}
+.btn{
+  font-family:var(--sans);font-size:14.5px;font-weight:600;letter-spacing:-.005em;
+  text-decoration:none;padding:11px 18px;border-radius:2px;display:inline-block;
+  border:1px solid var(--accent);background:var(--accent);
+  color:var(--on-accent);transition:opacity .12s ease, border-color .12s ease;
+}
+.btn:hover{opacity:.88}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn.ghost:hover{border-color:var(--ink-3);opacity:1}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+/* ---------- instrument panel (the live drawing) ---------- */
+.instrument{
+  margin-top:clamp(34px,5vw,54px);
+  background:var(--instrument);border:1px solid var(--instrument-line);
+  border-radius:3px;overflow:hidden;
+}
+.instrument-head{
+  display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline;
+  padding:13px 18px;border-bottom:1px solid var(--instrument-line);
+  font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--instrument-ink-3);
+}
+.instrument-head .t{color:var(--instrument-ink-2)}
+.readout{margin-left:auto;font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:none;color:var(--instrument-ink-2)}
+.readout b{color:var(--instrument-accent);font-weight:600;font-variant-numeric:tabular-nums}
+#piece{display:block;width:100%;height:auto;max-width:100%;background:var(--instrument)}
+.instrument-foot{
+  display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;
+  padding:12px 18px;border-top:1px solid var(--instrument-line);
+  font-family:var(--mono);font-size:11.5px;color:var(--instrument-ink-3);
+}
+.key{display:inline-flex;align-items:center;gap:7px}
+.swatch{width:16px;height:0;border-top-width:2px;border-top-style:solid;display:inline-block}
+
+/* ---------- generic section ---------- */
+section{padding-block:clamp(48px,7vw,84px)}
+.sec-head{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;margin-bottom:26px}
+.sec-head .count{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.1em}
+
+/* ---------- capabilities ---------- */
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:2px;background:var(--line);border:1px solid var(--line);border-radius:3px}
+.cap{background:var(--surface);padding:24px 22px 26px}
+.cap h3{margin-bottom:9px}
+.cap p{font-size:15.5px;color:var(--ink-2);line-height:1.58}
+.cap .n{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.1em;display:block;margin-bottom:12px}
+
+/* ---------- work ---------- */
+.work{display:flex;flex-direction:column;gap:0}
+.item{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:14px;
+  padding-block:30px;border-top:1px solid var(--line);
+}
+.item:last-child{border-bottom:1px solid var(--line)}
+@media (min-width:760px){
+  .item{grid-template-columns:186px minmax(0,1fr);gap:34px}
+}
+.item-meta{display:flex;flex-direction:column;gap:7px}
+.tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--accent);
+}
+.tag.muted{color:var(--ink-3)}
+.item h3{margin-bottom:10px}
+.item > div:last-child{max-width:68ch}
+.item p{font-size:16px;color:var(--ink-2)}
+.item p + p{margin-top:11px}
+.item code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1.5px 5px;border-radius:2px;color:var(--ink)}
+.links{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:15px}
+.links a{
+  font-family:var(--sans);font-size:14px;font-weight:600;text-decoration:none;
+  color:var(--accent);border-bottom:1px solid transparent;padding-bottom:1px;
+}
+.links a:hover{border-bottom-color:var(--accent)}
+.links a::after{content:" \2192";font-family:var(--sans)}
+
+/* ---------- stack ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.chip{
+  font-family:var(--mono);font-size:12px;color:var(--ink-2);
+  border:1px solid var(--line-2);border-radius:2px;padding:5px 9px;background:var(--surface);
+}
+.stack-group{margin-top:22px}
+.stack-group .eyebrow{display:block;margin-bottom:9px}
+
+/* ---------- contact ---------- */
+.contact{display:flex;flex-wrap:wrap;gap:22px 40px;align-items:flex-end;justify-content:space-between}
+.mail{
+  font-family:var(--sans);font-weight:700;letter-spacing:-.02em;
+  font-size:clamp(20px,3.4vw,32px);text-decoration:none;color:var(--ink);
+  border-bottom:2px solid var(--accent);padding-bottom:3px;display:inline-block;overflow-wrap:anywhere;
+}
+.mail:hover{color:var(--accent)}
+footer{padding-block:34px 44px;border-top:1px solid var(--line);margin-top:10px}
+.foot-row{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center;
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.foot-row a{color:var(--ink-3);text-decoration:none;border-bottom:1px solid var(--line-2)}
+.foot-row a:hover{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <p class="eyebrow">Computational geometry · Graphics · CAD</p>
+    <h1>I build the geometry layer underneath graphics software.</h1>
+    <div class="measure">
+      <p class="lede">The part that has to be <strong>correct</strong>, not just look right. Product configurators, CAD-like editors and the algorithms under them — offsetting, booleans, hit testing, nesting, numerical tolerance, and the degenerate cases that break naive implementations.</p>
+    </div>
+    <div class="hero-cta">
+      <a class="btn" href="mailto:sampaiomarcelati@gmail.com?subject=Project%20enquiry">Start a project</a>
+      <a class="btn ghost" href="https://github.com/marcelaSampaio" rel="noopener">GitHub</a>
+    </div>
+
+    <figure class="instrument" style="margin-block-end:0">
+      <div class="instrument-head">
+        <span class="t">Seam allowance · live</span>
+        <span>bodice front</span>
+        <span class="readout">allowance <b id="ro">10.0</b> mm · max deviation <b id="ro2">0.00</b> mm</span>
+      </div>
+      <canvas id="piece" width="1000" height="440" aria-label="A garment pattern piece with a seam allowance offset drawn around it, sweeping between 1 and 15 millimetres."></canvas>
+      <figcaption class="instrument-foot">
+        <span class="key"><span class="swatch" style="border-top-color:#9BB0B6"></span> sewing line</span>
+        <span class="key"><span class="swatch" style="border-top-color:#57C2A8;border-top-style:dashed"></span> cutting line — seam allowance</span>
+        <span style="margin-left:auto">Every point measured back to the sewing line, every frame.</span>
+      </figcaption>
+    </figure>
+  </header>
+
+  <section id="what">
+    <hr class="ruler" aria-hidden="true">
+    <div class="sec-head" style="margin-top:26px">
+      <h2>What I'm hired for</h2>
+    </div>
+    <div class="caps">
+      <div class="cap">
+        <span class="n">01</span>
+        <h3>Geometry algorithms</h3>
+        <p>Offsetting, booleans, self-intersection removal, point-in-polygon, nesting and tolerance handling — written from scratch when a library's edge cases don't match the domain, and tested against the degenerate inputs rather than the pretty ones.</p>
+      </div>
+      <div class="cap">
+        <span class="n">02</span>
+        <h3>Browser graphics</h3>
+        <p>Three.js, WebGL, Canvas 2D and SVG. 3D product configurators, CAD-like editors and interactive diagrams, built to stay responsive with thousands of entities on screen and to behave the same on a laptop trackpad and a touchscreen.</p>
+      </div>
+      <div class="cap">
+        <span class="n">03</span>
+        <h3>The backend under it</h3>
+        <p>Rails, Java and Node. API design that keeps a graphics front end fast, background-job architecture, and LLM pipelines with spend ceilings and circuit breakers so an integration can be left running unattended.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="work">
+    <hr class="ruler" aria-hidden="true">
+    <div class="sec-head" style="margin-top:26px">
+      <h2>Open source &amp; public work</h2>
+      <span class="count">04 projects · all linked</span>
+    </div>
+
+    <div class="work">
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Open source</span>
+          <span class="tag muted">Canvas 2D · no dependencies</span>
+        </div>
+        <div>
+          <h3>Polygon Offset Playground</h3>
+          <p>Offsetting a polygon looks like moving every vertex outward along its angle bisector. It is the first thing you would write, and it is wrong — not because it self-intersects, which on most shapes it doesn't, but because it lands at the wrong distance. On the demo's star at 68&nbsp;px, the worst point of the naive result sits <strong>123.6&nbsp;px</strong> from the source polygon. In CAD or cutting, that distance <em>is</em> the point: it's the seam allowance, the tool radius, the kerf.</p>
+          <p>The robust pass offsets each edge along its own normal, fills convex corners with an arc fan, trims reflex corners to the offset-edge intersection with a miter cap, then densifies and filters samples by their true distance to the source. The readout measures both, live, while you drag the vertices.</p>
+          <div class="links">
+            <a href="https://marcelasampaio.github.io/polygon-offset/" rel="noopener">Open the demo</a>
+            <a href="https://github.com/marcelaSampaio/polygon-offset" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Open source library</span>
+          <span class="tag muted">TypeScript · React · Angular</span>
+        </div>
+        <div>
+          <h3>looks-glassy</h3>
+          <p>Refractive glass components for React and Angular, built on physics-based SVG displacement maps rather than a backdrop blur pretending to be glass. A framework-agnostic core generates the displacement map and builds the SVG filter; thin React and Angular packages wrap it.</p>
+          <p>Refractive index, glass thickness, bezel width, surface profile, specular angle and saturation are all parameters, so the effect is tuned like an optical material instead of dialled in by eye — with graceful fallbacks where the filter chain isn't supported.</p>
+          <div class="links">
+            <a href="https://github.com/marcelaSampaio/looks-glassy" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Ongoing</span>
+          <span class="tag muted">Automation engineer</span>
+        </div>
+        <div>
+          <h3>Prompt&nbsp;Ops</h3>
+          <p>I build the automation systems at Prompt Ops, a Brazilian studio that wires AI into the tools a business already runs — CRM, customer support, internal operations — rather than adding one more app beside them.</p>
+          <p>The work is integration and tuning: connecting existing systems, shaping prompts and workflows for accuracy and cost, and putting in the guardrails that let an automation be left running unattended instead of watched.</p>
+          <div class="links">
+            <a href="https://www.promptops.com.br" rel="noopener">promptops.com.br</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Architecture case</span>
+          <span class="tag muted">Rails · Sidekiq · PostgreSQL</span>
+        </div>
+        <div>
+          <h3>LLM outreach pipeline</h3>
+          <p>A six-stage pipeline where the interesting part is everything around the model call. Daily <em>and</em> per-record spend ceilings are checked before the request rather than after. A circuit breaker opens on provider failure and the workers re-queue with a delay instead of burning their retry budget — and it only counts API errors, so a bug in my own code raises through instead of hiding behind an open circuit.</p>
+          <p>Sources are pluggable behind one interface, deduplication leans on a unique index rather than check-then-insert so concurrent workers can't both win, and nothing reaches a recipient without passing a human approval gate. Each stage sits behind its own feature flag, switchable without a deploy.</p>
+          <div class="links">
+            <a href="https://github.com/marcelaSampaio/llm-outreach-pipeline" rel="noopener">Source &amp; architecture notes</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section id="stack" style="padding-top:0">
+    <hr class="ruler" aria-hidden="true">
+    <div class="sec-head" style="margin-top:26px"><h2>Stack</h2></div>
+    <div class="stack-group">
+      <span class="eyebrow">Graphics &amp; geometry</span>
+      <div class="chips">
+        <span class="chip">Three.js</span><span class="chip">WebGL</span><span class="chip">Canvas 2D</span>
+        <span class="chip">SVG</span><span class="chip">GLSL</span><span class="chip">CAD data formats</span>
+      </div>
+    </div>
+    <div class="stack-group">
+      <span class="eyebrow">Front end</span>
+      <div class="chips">
+        <span class="chip">TypeScript</span><span class="chip">Angular</span><span class="chip">React</span>
+        <span class="chip">RxJS</span><span class="chip">Jest / Karma / Cypress</span>
+      </div>
+    </div>
+    <div class="stack-group">
+      <span class="eyebrow">Back end &amp; infra</span>
+      <div class="chips">
+        <span class="chip">Ruby on Rails</span><span class="chip">Java / Spring Boot</span><span class="chip">Node.js</span>
+        <span class="chip">PostgreSQL</span><span class="chip">Redis / Sidekiq</span><span class="chip">AWS</span><span class="chip">Docker</span><span class="chip">CI/CD</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" style="padding-top:0">
+    <hr class="ruler" aria-hidden="true">
+    <div class="sec-head" style="margin-top:26px"><h2>Available for freelance work</h2></div>
+    <div class="measure" style="margin-bottom:26px">
+      <p class="lede">Configurators, CAD-like tooling, geometry algorithms and the graphics work that sits between design and manufacturing. Background in Systems Analysis and Physics. Remote, working across European and North American hours.</p>
+    </div>
+    <div class="contact">
+      <a class="mail" href="mailto:sampaiomarcelati@gmail.com?subject=Project%20enquiry">sampaiomarcelati@gmail.com</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-row">
+      <span>Marcela Sampaio — computational geometry &amp; graphics</span>
+      <span><a href="https://github.com/marcelaSampaio" rel="noopener">github.com/marcelaSampaio</a></span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv = document.getElementById('piece');
+  if(!cv) return;
+  var ctx = cv.getContext('2d');
+  var roEl = document.getElementById('ro'), ro2El = document.getElementById('ro2');
+
+  /* A bodice-front outline in millimetres. Traversed from the hem, up the side
+     seam, around the armhole scye, across the shoulder, down the neckline and
+     back along the centre front. The scye and the neckline are concave, which
+     is exactly where a bisector offset goes wrong. */
+  var PIECE = [
+    [12,604],[6,470],[10,372],[26,300],[38,236],[44,196],
+    [62,170],[78,141],[97,109],
+    [129,86],[169,70],
+    [197,97],[215,133],[225,169],
+    [233,241],[235,401],[237,604]
+  ];
+
+  function sub(a,b){return {x:a.x-b.x, y:a.y-b.y};}
+  function add(a,b){return {x:a.x+b.x, y:a.y+b.y};}
+  function mul(a,k){return {x:a.x*k, y:a.y*k};}
+  function len(a){return Math.sqrt(a.x*a.x+a.y*a.y);}
+  function norm(a){var l=len(a)||1; return {x:a.x/l, y:a.y/l};}
+  function cross(a,b){return a.x*b.y-a.y*b.x;}
+
+  var poly = PIECE.map(function(p){return {x:p[0], y:p[1]};});
+
+  function signedArea(P){
+    var s=0;
+    for(var i=0;i<P.length;i++){var a=P[i],b=P[(i+1)%P.length]; s+=a.x*b.y-b.x*a.y;}
+    return s/2;
+  }
+  var OUT = signedArea(poly) > 0 ? 1 : -1;   /* sign that makes +d point outward */
+
+  function distToPoly(p,P){
+    var best=Infinity;
+    for(var i=0;i<P.length;i++){
+      var a=P[i], b=P[(i+1)%P.length];
+      var ab=sub(b,a), t=((p.x-a.x)*ab.x+(p.y-a.y)*ab.y)/(ab.x*ab.x+ab.y*ab.y||1);
+      t=Math.max(0,Math.min(1,t));
+      var d=len(sub(p, add(a, mul(ab,t))));
+      if(d<best) best=d;
+    }
+    return best;
+  }
+
+  function lineInt(p1,d1,p2,d2){
+    var den=cross(d1,d2);
+    if(Math.abs(den)<1e-9) return null;
+    var t=cross(sub(p2,p1),d2)/den;
+    return {x:p1.x+d1.x*t, y:p1.y+d1.y*t};
+  }
+
+  /* Robust: offset each edge along its own normal, arc-fill convex corners,
+     trim reflex corners, densify, then drop anything not at distance d. */
+  function robustOffset(P,d){
+    var n=P.length, ARC=14, MITER=d*8+40, i, seg=[];
+    for(i=0;i<n;i++){
+      var cur=P[i], next=P[(i+1)%n];
+      var e=norm(sub(next,cur));
+      var nr={x:e.y*OUT, y:-e.x*OUT};
+      seg.push({a:add(cur,mul(nr,d)), b:add(next,mul(nr,d)), e:e, v:next, nr:nr});
+    }
+    var joins=new Array(n);
+    for(i=0;i<n;i++){
+      var s1=seg[i], s2=seg[(i+1)%n], turn=cross(s1.e,s2.e);
+      joins[i]=null;
+      if(Math.abs(turn)<1e-9) continue;
+      var convex = OUT>0 ? turn>0 : turn<0;
+      if(convex){
+        var a0=Math.atan2(s1.nr.y,s1.nr.x), a1=Math.atan2(s2.nr.y,s2.nr.x);
+        var da=a1-a0;
+        while(da> Math.PI) da-=2*Math.PI;
+        while(da<-Math.PI) da+=2*Math.PI;
+        var fan=[];
+        for(var k=1;k<=ARC;k++){
+          var ang=a0+da*(k/ARC);
+          fan.push({x:s1.v.x+Math.cos(ang)*d, y:s1.v.y+Math.sin(ang)*d});
+        }
+        joins[i]=fan;
+      }else{
+        var X=lineInt(s1.a,s1.e,s2.a,s2.e);
+        if(X && len(sub(X,s1.v))<MITER){ s1.b=X; s2.a=X; joins[i]=[]; }
+      }
+    }
+    var pts=[];
+    for(i=0;i<n;i++){
+      var s=seg[i], L=len(sub(s.b,s.a)), steps=Math.max(1,Math.ceil(L/4));
+      for(var t=0;t<steps;t++) pts.push(add(s.a, mul(sub(s.b,s.a), t/steps)));
+      pts.push(s.b);
+      if(joins[i] && joins[i].length) pts=pts.concat(joins[i]);
+    }
+    var keep=[], tol=d*0.06+0.6;
+    for(i=0;i<pts.length;i++){
+      if(Math.abs(distToPoly(pts[i],poly)-d) <= tol) keep.push(pts[i]);
+    }
+    return keep;
+  }
+
+  /* ---- drawing ---- */
+  var COL = {
+    bg:'#0E1416', grid:'#1B262A', piece:'#9BB0B6', robust:'#57C2A8', naive:'#E0715F',
+    ink:'#7A9099', mark:'#3C4F55', box:'#2E3E43'
+  };
+
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 0, H = 0, wide = false;
+  var main = null, detail = null;
+  var DETAIL_C = {x:72, y:158};        /* the armhole scye: the concave stretch */
+  var DETAIL_ZOOM = 3.2;
+
+  function fitView(rect, P, pad){
+    var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    P.forEach(function(p){
+      if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
+      if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
+    });
+    var pw=(maxX-minX)+34, ph=(maxY-minY)+34;
+    var s = Math.min((rect.w-pad*2)/pw, (rect.h-pad*2)/ph);
+    return {
+      rect: rect, s: s,
+      ox: rect.x + rect.w/2 - ((minX+maxX)/2)*s,
+      oy: rect.y + rect.h/2 - ((minY+maxY)/2)*s
+    };
+  }
+  function zoomView(rect, s, c){
+    return {rect: rect, s: s, ox: rect.x + rect.w/2 - c.x*s, oy: rect.y + rect.h/2 - c.y*s};
+  }
+  function vx(v,p){return p.x*v.s + v.ox;}
+  function vy(v,p){return p.y*v.s + v.oy;}
+
+  function layout(){
+    var cssW = cv.clientWidth || 1000;
+    wide = cssW >= 700;
+    var cssH = wide ? Math.round(Math.min(430, Math.max(330, cssW*0.40)))
+                    : Math.round(Math.min(430, Math.max(300, cssW*0.92)));
+    cv.width  = Math.round(cssW*DPR);
+    cv.height = Math.round(cssH*DPR);
+    cv.style.height = cssH + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    W = cssW; H = cssH;
+
+    if(wide){
+      var dw = Math.min(330, Math.round(cssW*0.34));
+      var dh = Math.round(Math.min(cssH-64, dw*0.86));
+      main   = fitView({x:0, y:0, w:cssW-dw-46, h:cssH}, poly, 26);
+      detail = zoomView({x:cssW-dw-24, y:Math.round((cssH-dh)/2), w:dw, h:dh},
+                        main.s*DETAIL_ZOOM, DETAIL_C);
+    }else{
+      main   = fitView({x:0, y:0, w:cssW, h:cssH}, poly, 20);
+      detail = null;
+    }
+  }
+
+  function path(v, P, close){
+    if(!P.length) return;
+    ctx.beginPath();
+    ctx.moveTo(vx(v,P[0]),vy(v,P[0]));
+    for(var i=1;i<P.length;i++) ctx.lineTo(vx(v,P[i]),vy(v,P[i]));
+    if(close) ctx.closePath();
+  }
+
+  function grid(v){
+    ctx.save();
+    ctx.strokeStyle=COL.grid; ctx.lineWidth=1;
+    var step=50*v.s;
+    if(step>7){
+      var r=v.rect, x0=r.x + ((v.ox - r.x) % step), y0=r.y + ((v.oy - r.y) % step);
+      if(x0>r.x) x0-=step;
+      if(y0>r.y) y0-=step;
+      ctx.beginPath();
+      for(var x=x0;x<r.x+r.w;x+=step){ctx.moveTo(Math.round(x)+.5,r.y);ctx.lineTo(Math.round(x)+.5,r.y+r.h);}
+      for(var y=y0;y<r.y+r.h;y+=step){ctx.moveTo(r.x,Math.round(y)+.5);ctx.lineTo(r.x+r.w,Math.round(y)+.5);}
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function marks(v){
+    ctx.save();
+    ctx.strokeStyle=COL.mark; ctx.lineWidth=1.25;
+    var gx=122, gy0=190, gy1=520;
+    ctx.beginPath();
+    ctx.moveTo(vx(v,{x:gx,y:gy0}),vy(v,{x:gx,y:gy0}));
+    ctx.lineTo(vx(v,{x:gx,y:gy1}),vy(v,{x:gx,y:gy1}));
+    ctx.stroke();
+    [[gy0,1],[gy1,-1]].forEach(function(a){
+      ctx.beginPath();
+      ctx.moveTo(vx(v,{x:gx-7,y:a[0]+9*a[1]}),vy(v,{x:gx-7,y:a[0]+9*a[1]}));
+      ctx.lineTo(vx(v,{x:gx,y:a[0]}),vy(v,{x:gx,y:a[0]}));
+      ctx.lineTo(vx(v,{x:gx+7,y:a[0]+9*a[1]}),vy(v,{x:gx+7,y:a[0]+9*a[1]}));
+      ctx.stroke();
+    });
+    ctx.fillStyle=COL.ink;
+    ctx.font='500 10px ui-monospace, monospace';
+    ctx.save();
+    ctx.translate(vx(v,{x:gx,y:355})-6, vy(v,{x:gx,y:355}));
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('GRAIN', 0, 0);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function scene(v, d, opt){
+    opt = opt || {};
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(v.rect.x, v.rect.y, v.rect.w, v.rect.h);
+    ctx.clip();
+    grid(v);
+
+    ctx.save();
+    ctx.strokeStyle=COL.robust; ctx.lineWidth=opt.big?2.2:1.8; ctx.setLineDash([7,4]);
+    path(v, opt.off, true); ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle='rgba(155,176,182,0.07)';
+    path(v, poly, true); ctx.fill();
+    ctx.strokeStyle=COL.piece; ctx.lineWidth=opt.big?2:1.7; ctx.stroke();
+    ctx.restore();
+
+    if(!opt.big) marks(v);
+
+    ctx.save();
+    ctx.fillStyle=COL.bg; ctx.strokeStyle=COL.piece; ctx.lineWidth=1.2;
+    poly.forEach(function(p){
+      ctx.beginPath(); ctx.arc(vx(v,p),vy(v,p),opt.big?3.4:2.6,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function callout(){
+    if(!detail) return;
+    var r = detail.rect;
+    /* circle on the main drawing marking what the detail shows */
+    var rad = (Math.min(r.w,r.h)/2 - 8) / DETAIL_ZOOM;
+    var cx = vx(main, DETAIL_C), cy = vy(main, DETAIL_C);
+    ctx.save();
+    ctx.strokeStyle=COL.box; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI*2); ctx.stroke();
+    /* leader line to the detail box */
+    ctx.beginPath();
+    ctx.moveTo(cx+rad*0.7, cy-rad*0.7);
+    ctx.lineTo(r.x, r.y + 16);
+    ctx.stroke();
+    ctx.restore();
+
+    /* the detail frame */
+    ctx.save();
+    ctx.strokeStyle=COL.box; ctx.lineWidth=1;
+    ctx.strokeRect(r.x+.5, r.y+.5, r.w-1, r.h-1);
+    ctx.restore();
+  }
+
+  /* A dimension line where a pattern-maker would put one: across the allowance,
+     normal to the sewing line, on the lower armhole. */
+  var DIM_EDGE = 5;
+  function dimension(v, d){
+    var a = poly[DIM_EDGE], b = poly[(DIM_EDGE+1)%poly.length];
+    var mid = {x:(a.x+b.x)/2, y:(a.y+b.y)/2};
+    var e = norm(sub(b,a));
+    var nr = {x:e.y*OUT, y:-e.x*OUT};
+    var out = add(mid, mul(nr, d));
+    var x0=vx(v,mid), y0=vy(v,mid), x1=vx(v,out), y1=vy(v,out);
+    ctx.save();
+    ctx.strokeStyle=COL.robust; ctx.lineWidth=1; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+    var tx=(y1-y0), ty=-(x1-x0), tl=Math.sqrt(tx*tx+ty*ty)||1;
+    tx=tx/tl*4.5; ty=ty/tl*4.5;
+    ctx.beginPath();
+    ctx.moveTo(x0-tx,y0-ty); ctx.lineTo(x0+tx,y0+ty);
+    ctx.moveTo(x1-tx,y1-ty); ctx.lineTo(x1+tx,y1+ty);
+    ctx.stroke();
+    ctx.font='600 11px ui-monospace, monospace';
+    ctx.fillStyle=COL.robust;
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(d.toFixed(1)+' mm', (x0+x1)/2 + tx*2.2 - 8, (y0+y1)/2 + ty*2.2);
+    ctx.restore();
+  }
+
+  function detailLabels(){
+    var r = detail.rect;
+    ctx.save();
+    ctx.font='500 10px ui-monospace, monospace';
+    ctx.fillStyle=COL.ink;
+    ctx.textBaseline='bottom'; ctx.textAlign='left';
+    ctx.fillText('DETAIL A · ARMHOLE SCYE · ' + DETAIL_ZOOM.toFixed(1) + ':1', r.x, r.y-7);
+    ctx.restore();
+  }
+
+  function maxDeviation(R, d){
+    var w=0;
+    for(var i=0;i<R.length;i++){
+      var e=Math.abs(distToPoly(R[i],poly)-d);
+      if(e>w) w=e;
+    }
+    return w;
+  }
+
+  function draw(d){
+    var off = robustOffset(poly,d);
+    ctx.fillStyle=COL.bg;
+    ctx.fillRect(0,0,W,H);
+    scene(main, d, {off:off});
+    if(detail){
+      callout();
+      scene(detail, d, {big:true, off:off});
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(detail.rect.x, detail.rect.y, detail.rect.w, detail.rect.h);
+      ctx.clip();
+      dimension(detail, d);
+      ctx.restore();
+      detailLabels();
+    }else{
+      dimension(main, d);
+    }
+    return off;
+  }
+
+  /* ---- animation: sweeps the allowance 1 -> 15 mm and back ---- */
+  var startT = null, D_MIN = 1, D_MAX = 15, PERIOD = 13000, running = true;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function frame(ts){
+    if(startT===null) startT = ts - PERIOD*0.40;   /* open mid-sweep, never blank */
+    var t = ((ts-startT) % PERIOD) / PERIOD;
+    var e = (1-Math.cos(t*Math.PI*2))/2;
+    var d = D_MIN + e*(D_MAX-D_MIN);
+    var off = draw(d);
+    roEl.textContent = d.toFixed(1);
+    ro2El.textContent = maxDeviation(off, d).toFixed(2);
+    if(running) requestAnimationFrame(frame);
+  }
+
+  function boot(){
+    layout();
+    if(reduce){
+      var off = draw(10);
+      roEl.textContent = '10.0';
+      ro2El.textContent = maxDeviation(off,10).toFixed(2);
+    } else {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  var rt;
+  window.addEventListener('resize', function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){ layout(); if(reduce) draw(10); }, 140);
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ running=false; }
+    else if(!reduce && !running){ running=true; startT=null; requestAnimationFrame(frame); }
+  });
+
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(boot); } else { boot(); }
+})();
+</script>
+
+</body>
+</html>
