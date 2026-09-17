@@ -236,23 +236,70 @@ footer{padding-block:34px 44px;border-top:1px solid var(--line);margin-top:10px}
     <hr class="ruler" aria-hidden="true">
     <div class="sec-head" style="margin-top:26px">
       <h2>Open source &amp; public work</h2>
-      <span class="count">04 projects · all linked</span>
+      <span class="count">07 projects · all linked</span>
     </div>
 
     <div class="work">
 
       <article class="item">
         <div class="item-meta">
-          <span class="tag">Open source</span>
-          <span class="tag muted">Canvas 2D · no dependencies</span>
+          <span class="tag">Open source library</span>
+          <span class="tag muted">TypeScript · zero dependencies</span>
         </div>
         <div>
-          <h3>Polygon Offset Playground</h3>
-          <p>Offsetting a polygon looks like moving every vertex outward along its angle bisector. It is the first thing you would write, and it is wrong — not because it self-intersects, which on most shapes it doesn't, but because it lands at the wrong distance. On the demo's star at 68&nbsp;px, the worst point of the naive result sits <strong>123.6&nbsp;px</strong> from the source polygon. In CAD or cutting, that distance <em>is</em> the point: it's the seam allowance, the tool radius, the kerf.</p>
-          <p>The robust pass offsets each edge along its own normal, fills convex corners with an arc fan, trims reflex corners to the offset-edge intersection with a miter cap, then densifies and filters samples by their true distance to the source. The readout measures both, live, while you drag the vertices.</p>
+          <h3>polygon-offset</h3>
+          <p>Offsetting a polygon so that every point of the result is <em>actually</em> at the distance you asked for. The intuitive method — push each vertex along its angle bisector — puts the corner at <code>d / sin(θ/2)</code> instead of <code>d</code>; on a star offset by 40 the worst point lands 121.8 units out. It still looks like an offset, which is the problem.</p>
+          <p>The library ships <code>maxDeviation</code> as part of its public API, because a picture cannot tell you an offset is correct. It also ships the naive method, so the error is measurable rather than asserted. 57 tests, the core of them one property asserted across five shapes: every returned point is at the requested distance, to 1e-6.</p>
           <div class="links">
-            <a href="https://marcelasampaio.github.io/polygon-offset/" rel="noopener">Open the demo</a>
+            <a href="https://marcelasampaio.github.io/polygon-offset/" rel="noopener">Interactive demo</a>
             <a href="https://github.com/marcelaSampaio/polygon-offset" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Open source</span>
+          <span class="tag muted">Three.js · WebGL</span>
+        </div>
+        <div>
+          <h3>Parametric product configurator</h3>
+          <p>A 3D configurator with no model file. Most load a finished mesh and swap its materials, which demos well and says nothing about whether the thing can be made. Here the parameters are dimensions in millimetres: changing the gusset depth doesn't select a variant, it rebuilds the geometry — and moves the gusset on the 2D cutting layout by the same millimetres.</p>
+          <p>The cutting line is a polygon offset of the sewing line, and the page measures every point of it back to the sewing line: 0.00 mm. Three.js vendored rather than pulled from a CDN, so it has no external runtime dependency.</p>
+          <div class="links">
+            <a href="https://marcelasampaio.github.io/threejs-product-configurator/" rel="noopener">Open the configurator</a>
+            <a href="https://github.com/marcelaSampaio/threejs-product-configurator" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Open source</span>
+          <span class="tag muted">Packing under constraints</span>
+        </div>
+        <div>
+          <h3>Nesting playground</h3>
+          <p>Nesting looks like bin packing until the material starts making rules: the roll is a fixed width and unbounded length, pieces must run along the grain so most get two rotations rather than four, and everything needs a gap. Each constraint is a control here rather than a paragraph, so its cost is visible in metres — dropping the grain lock on the default four-garment marker takes it from 2.54 m to 2.44 m.</p>
+          <p>Bottom-left fill with a skyline accelerator on a raster grid, run across four orderings because greedy placement is order-dependent and none wins on every mix. The grid resolution is a control too, so you can watch efficiency fail to improve monotonically as it gets finer — which is the greedy showing through, and the reason production nesters run search on top.</p>
+          <div class="links">
+            <a href="https://marcelasampaio.github.io/nesting-playground/" rel="noopener">Open the playground</a>
+            <a href="https://github.com/marcelaSampaio/nesting-playground" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div class="item-meta">
+          <span class="tag">Writing</span>
+          <span class="tag muted">Interactive</span>
+        </div>
+        <div>
+          <h3>Geometry for design tools</h3>
+          <p>Four pieces of 2D geometry every CAD-like editor needs — orientation, point-in-polygon, distance, tolerance — each written around its failure mode rather than its formula. Every figure is draggable and every number is computed live. The formulas take thirty seconds to look up; knowing which assumption breaks and what it costs downstream is the part that isn't written down anywhere.</p>
+          <div class="links">
+            <a href="https://marcelasampaio.github.io/geometry-for-design-tools/" rel="noopener">Read it</a>
+            <a href="https://github.com/marcelaSampaio/geometry-for-design-tools" rel="noopener">Source</a>
           </div>
         </div>
       </article>
